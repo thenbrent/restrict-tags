@@ -20,44 +20,26 @@ function rt_remove_tag_traces(){
 
 	if( !current_user_can( 'activate_plugins' ) ) {
 		unset( $submenu[ 'edit.php' ][ 16 ] ); // Remove "Post Tags" item from the Admin Menu
-		$wp_taxonomies[ 'post_tag' ]->show_ui = false; // Need custom metabox so it doesn't include the 'Add New Tag'. 
+		//$wp_taxonomies[ 'post_tag' ]->show_ui = false; // Need custom metabox so it doesn't include the 'Add New Tag'. 
 		$wp_taxonomies[ 'post_tag' ]->hierarchical = true; // Checkboxes for quick edit & advanced edit
 		//remove_meta_box( 'tagsdiv-post_tag', 'post', 'side' );
 	}
 }
 add_action( 'admin_menu' , 'rt_remove_tag_traces' );
 
-
 /**
- * Because the tags are set to be hierachal, the markup changes and therefore the 
- * tags need to be saved manually. 
+ * Include custom CSS to hide the "Add Post Tags"
  **/
-function rt_save_tags( $post_id ){
-
-	// First delete the tags added by WordPress (not way to overcome that)
-
-
-	//wp_delete_term( $term, $taxonomy, $args = array() )
-
-	// verify if this is an auto save routine. If it is our form has not been submitted, so we dont want to do anything
-	if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) 
-		return $post_id;
-
-	if ( 'page' == $_POST['post_type'] )
-  		return $post_id;
-	elseif ( !current_user_can( 'edit_post', $post_id ) )
-	  	return $post_id;
-
-	error_log( '$_POST = ' . print_r( $_POST, true ) );
-	if( isset( $_POST[ 'post_tags' ] ) ){
-		$post_tags = $_POST[ 'post_tag' ];
-		//wp_set_object_terms( $post_id, $post_tags, 'post_tags' );
-		error_log( '$post_tags = ' . print_r( $post_tags, true ) );
+function rt_add_css(){	
+	if( !current_user_can( 'activate_plugins' ) ) {
+		?>
+		<style type="text/css">
+			#post_tag-adder { display:none; }
+		</style>
+	<?php
 	}
-
-	return $post_id;
 }
-add_action( 'save_post', 'rt_save_tags' );
+add_action( 'admin_print_styles-post.php', 'rt_add_css' );
 
 
 /**
@@ -77,6 +59,30 @@ function rt_modify_tags_structure(){
 	}
 }
 add_action( 'admin_init', 'rt_modify_tags_structure' );
+
+
+ /**
+ * Because the tags are set to be hierachal, the markup changes and therefore the 
+ * tags need to be saved manually. 
+  **/
+function rt_save_tags( $post_id ){
+	if( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
+		return $post_id;
+
+	if( 'page' == $_POST['post_type'] )
+		return $post_id;
+	elseif( !current_user_can( 'edit_post', $post_id ) )
+		return $post_id;
+
+	error_log( '$_POST = ' . print_r( $_POST, true ) );
+	if( isset( $_POST[ 'post_tags' ] ) ){
+		$post_tags = $_POST[ 'post_tag' ];
+		//wp_set_object_terms( $post_id, $post_tags, 'post_tags' );
+		error_log( '$post_tags = ' . print_r( $post_tags, true ) );
+	}
+	return $post_id;
+}
+add_action( 'save_post', 'rt_save_tags' );
 
 
 /**
