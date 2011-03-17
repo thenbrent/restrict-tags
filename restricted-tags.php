@@ -12,33 +12,25 @@ Version: 1.0
 
 
 /**
- * For non-administrators, this function hides the tag metabox on the quick edit and 
- * edit post screens. It also removes the Post Tags submenu menu item. 
+ * For non-administrators, this function converts the tag metabox on the quick edit and 
+ * edit post screens.
+ *
+ * It does this by overriding the 'post_tag' item in the $wp_taxonomies global and setting
+ * it to be a hierarchical type. This is the only method to convert the tag form to radio boxes 
+ * on the quick edit form. It does not change the 'post_tag' to hierarchical when a post is
+ * being saved because this breaks the internal WordPress process for saving tags.
+ *
+ * The function also removes the Post Tags submenu menu item from the $submenu global. 
  **/
-function rt_remove_tag_traces(){
+function rt_convert_tags(){
 	global $submenu, $wp_taxonomies;
 
 	if( !current_user_can( 'activate_plugins' ) && !isset( $_POST[ 'action' ] ) ){ 
-		unset( $submenu[ 'edit.php' ][ 16 ] ); // Remove "Post Tags" item from the Admin Menu
-		$wp_taxonomies[ 'post_tag' ]->hierarchical = true; // Checkboxes for quick edit & advanced edit
+		unset( $submenu[ 'edit.php' ][ 16 ] );
+		$wp_taxonomies[ 'post_tag' ]->hierarchical = true;
 	}
 }
 add_action( 'admin_menu' , 'rt_remove_tag_traces' );
-
-
-/**
- * Include CSS to hide the "Add Post Tags" for non-administrators on the edit post screen.
- **/
-function rt_add_css(){	
-	if( !current_user_can( 'activate_plugins' ) ) {
-		?>
-		<style type="text/css">
-			#post_tag-adder { display:none; }
-		</style>
-	<?php
-	}
-}
-add_action( 'admin_print_styles-post.php', 'rt_add_css' );
 
 
 /**
@@ -58,6 +50,21 @@ function rt_modify_tags_structure(){
 	}
 }
 add_action( 'admin_init', 'rt_modify_tags_structure' );
+
+
+/**
+ * Include CSS to hide the "Add Post Tags" for non-administrators on the edit post screen.
+ **/
+function rt_add_css(){	
+	if( !current_user_can( 'activate_plugins' ) ) {
+		?>
+		<style type="text/css">
+			#post_tag-adder { display:none; }
+		</style>
+	<?php
+	}
+}
+add_action( 'admin_print_styles-post.php', 'rt_add_css' );
 
 
 /**
