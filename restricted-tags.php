@@ -1,8 +1,4 @@
 <?php
-/**
- * @package Restrict Tags & Custom Taxonomy Columns
- * @version 1.0
- */
 /*
 Plugin Name: Restrict Tags & Add Columns for Custom Taxonomies
 Description: Allow site admins to restrict the tags available for other users on their site. Give custom taxonomies a column on the manage posts page. 
