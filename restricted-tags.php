@@ -12,58 +12,22 @@ Version: 1.0
 
 
 /**
- * For non-administrators, this function hides the tag metabox, quick edit and
- * Post Tags menu links. 
+ * For non-administrators, this function hides the tag metabox, quick edit form as well as 
+ * the Post Tags menu item.
+ *
+ * It also hooks a custom meta box to display tags created by an admin with a checkbox to
+ * non-administrator users.
  **/
-function rt_remove_tag_traces(){
+function rt_modify_tag_ui(){
 	global $menu, $submenu, $wp_taxonomies;
 
 	if( !current_user_can( 'activate_plugins' ) ) {
 		unset( $submenu[ 'edit.php' ][ 16 ] ); // Remove "Post Tags" item from the Admin Menu
-		//$wp_taxonomies[ 'post_tag' ]->show_ui = false;
-		$wp_taxonomies[ 'post_tag' ]->hierarchical = true; // Checkboxes for quick edit & advanced edit
-		//remove_meta_box( 'tagsdiv-post_tag', 'post', 'side' );
-//		error_log( '$wp_taxonomies = ' . print_r( $wp_taxonomies, true ) );
+		$wp_taxonomies[ 'post_tag' ]->show_ui = false; // Removes quick edit & Post Tags metabox
+		add_meta_box( 'post_tag' . 'div', __( 'Post Tags' ), 'rt_custom_tag_metabox', 'post', 'side', 'low' );
 	}
 }
-add_action( 'admin_menu' , 'rt_remove_tag_traces' );
-
-
-/**
- * Because the tags are set to be hierachal, the markup changes and therefore the 
- * tags need to be saved manually. 
- **/
-function rt_save_tags( $post_id ){
-
-	// verify if this is an auto save routine. If it is our form has not been submitted, so we dont want to do anything
-	if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) 
-		return $post_id;
-
-	if ( 'page' == $_POST['post_type'] )
-  		return $post_id;
-	elseif ( !current_user_can( 'edit_post', $post_id ) )
-	  	return $post_id;
-
-	// OK, we're authenticated: we need to find and save the data
-	$post_tags = $_POST[ 'post_tags' ];
-	wp_set_object_terms( $post_id, $post_tags, 'post_tags' );
-
-	return $theme;
-}
-//add_action( 'save_post', 'rt_save_tags' );
-
-
-/**
- * For non-administrators, this function adds a new meta box which lists the tags created by 
- * an admin with a checkbox. 
- **/
-function rt_add_tag_metabox(){
-
-	if( !current_user_can( 'activate_plugins' ) ) // check for admin
-		add_meta_box( 'post_tag' . 'div', __( 'Post Tags' ), 'rt_custom_tag_metabox', 'post', 'side', 'core' );
-		//add_meta_box( 'tagsdiv-' . 'post_tag', __( 'Post Tags' ), 'rt_custom_tag_metabox', 'post', 'side', 'core' );
-}
-add_action( 'add_meta_boxes' , 'rt_add_tag_metabox' );
+add_action( 'admin_menu' , 'rt_modify_tag_ui' );
 
 
 /**
@@ -92,16 +56,23 @@ function rt_custom_tag_metabox( $post ) {
 
 
 /**
- * The callback function for the custom tags metabox. 
+ * When a post is saved by a non-admin user, the tags are sent as an array because
+ * they come from a hierarchal UI. This confuses the WordPress tag saving process,
+ * so this function transforms the array into the flat CSV string WP expects.
  **/
-function rt_mock_tax(){
-	$args = array( 'label' => 'Mocks' );
-	register_taxonomy( 'mock_tax', 'post', $args );
+function rt_modify_tags_structure(){
 
-	$args = array( 'label' => 'Faux', 'hierarchical' => true );
-	register_taxonomy( 'faux_tax', 'post', $args );
+	if( isset( $_POST[ 'tax_input' ][ 'post_tag' ] ) && is_array( $_POST[ 'tax_input' ][ 'post_tag' ] ) ){
+		$terms = $_POST[ 'tax_input' ][ 'post_tag' ];
+		unset( $terms[0] );
+		foreach( $terms as $id => $term ){
+			$term = get_term( $term, 'post_tag' );
+			$terms[ $id ] = $term->name;
+		}
+		$_POST[ 'tax_input' ][ 'post_tag' ] = implode( ', ', $terms );
+	}
 }
-add_action( 'init', 'rt_mock_tax' );
+add_action( 'init', 'rt_modify_tags_structure' );
 
 
 /**
