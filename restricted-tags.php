@@ -8,33 +8,56 @@ Version: 1.0
 
 
 /**
- * For non-administrators, this function converts the tag metabox on the quick edit and 
- * edit post screens.
+ * For non-administrators, this function hides the tag metabox, quick edit form as well as 
+ * the Post Tags menu item.
  *
- * It does this by overriding the 'post_tag' item in the $wp_taxonomies global and setting
- * it to be a hierarchical type. This is the only method to convert the tag form to radio boxes 
- * on the quick edit form. It does not change the 'post_tag' to hierarchical when a post is
- * being saved because this breaks the internal WordPress process for saving tags.
- *
- * The function also removes the Post Tags submenu menu item from the $submenu global. 
+ * It also hooks a custom meta box to display tags created by an admin with a checkbox to
+ * non-administrator users.
  **/
-function rt_convert_tags(){
-	global $submenu, $wp_taxonomies;
+function rt_modify_tag_ui(){
+	global $menu, $submenu, $wp_taxonomies;
 
-	if( !current_user_can( 'activate_plugins' ) && !isset( $_POST[ 'action' ] ) ){ 
-		unset( $submenu[ 'edit.php' ][ 16 ] );
-		$wp_taxonomies[ 'post_tag' ]->hierarchical = true;
+	if( !current_user_can( 'activate_plugins' ) ) {
+		unset( $submenu[ 'edit.php' ][ 16 ] ); // Remove "Post Tags" item from the Admin Menu
+		$wp_taxonomies[ 'post_tag' ]->show_ui = false; // Removes quick edit & Post Tags metabox
+		add_meta_box( 'post_tag' . 'div', __( 'Post Tags' ), 'rt_custom_tag_metabox', 'post', 'side', 'low' );
 	}
 }
-add_action( 'admin_menu' , 'rt_remove_tag_traces' );
+add_action( 'admin_menu' , 'rt_modify_tag_ui' );
+
+
+/**
+ * The callback function for the custom tags metabox. 
+ **/
+function rt_custom_tag_metabox( $post ) {
+
+	$taxonomy = 'post_tag';
+	$tax = get_taxonomy( $taxonomy );
+
+	?>
+	<div id="taxonomy-<?php echo $taxonomy; ?>" class="categorydiv">
+
+		<div id="<?php echo $taxonomy; ?>-all" class="tabs-panel">
+			<?php
+            $name = ( $taxonomy == 'category' ) ? 'post_category' : 'tax_input[' . $taxonomy . ']';
+            echo "<input type='hidden' name='{$name}[]' value='0' />"; // Allows for an empty term set to be sent. 0 is an invalid Term ID and will be ignored by empty() checks.
+            ?>
+			<ul id="<?php echo $taxonomy; ?>checklist" class="list:<?php echo $taxonomy?> categorychecklist form-no-clear">
+				<?php wp_terms_checklist( $post->ID, array( 'taxonomy' => $taxonomy ) ) ?>
+			</ul>
+		</div>
+	</div>
+	<?php
+}
 
 
 /**
  * When a post is saved by a non-admin user, the tags are sent as an array because
- * they use a hierarchal UI. This confuses the WordPress tag saving process,
- * so this function transforms the array into a flat CSV string.
+ * they come from a hierarchal UI. This confuses the WordPress tag saving process,
+ * so this function transforms the array into the flat CSV string WP expects.
  **/
 function rt_modify_tags_structure(){
+
 	if( isset( $_POST[ 'tax_input' ][ 'post_tag' ] ) && is_array( $_POST[ 'tax_input' ][ 'post_tag' ] ) ){
 		$terms = $_POST[ 'tax_input' ][ 'post_tag' ];
 		unset( $terms[0] );
@@ -45,22 +68,7 @@ function rt_modify_tags_structure(){
 		$_POST[ 'tax_input' ][ 'post_tag' ] = implode( ', ', $terms );
 	}
 }
-add_action( 'admin_init', 'rt_modify_tags_structure' );
-
-
-/**
- * Include CSS to hide the "Add Post Tags" for non-administrators on the edit post screen.
- **/
-function rt_add_css(){	
-	if( !current_user_can( 'activate_plugins' ) ) {
-		?>
-		<style type="text/css">
-			#post_tag-adder { display:none; }
-		</style>
-	<?php
-	}
-}
-add_action( 'admin_print_styles-post.php', 'rt_add_css' );
+add_action( 'init', 'rt_modify_tags_structure' );
 
 
 /**
@@ -105,7 +113,7 @@ function rt_column_contents( $column_name, $post_id ) {
 			$out = array();
 			foreach ( $terms as $term )
 				$termlist[] = "<a href='edit.php?$taxonomy_name=$term->slug'> " . esc_html( sanitize_term_field( 'name', $term->name, $term->term_id, $taxonomy_name, 'display' ) ) . "</a>";
-			echo implode( ', ', $termlist );
+			echo join( ', ', $termlist );
 		} else {
 			printf( __( 'No %s.'), $taxonomy->label );
 		}
