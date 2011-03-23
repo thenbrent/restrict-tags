@@ -15,10 +15,12 @@ Version: 1.0
  * non-administrator users.
  **/
 function rt_modify_tag_ui(){
-	global $menu, $submenu, $wp_taxonomies;
+	global $submenu, $wp_taxonomies;
 
 	if( !current_user_can( 'activate_plugins' ) ) {
-		unset( $submenu[ 'edit.php' ][ 16 ] ); // Remove "Post Tags" item from the Admin Menu
+		foreach( $submenu[ 'edit.php' ] as $key => $menu_item )
+			if( $menu_item[1] == 'manage_categories' && $menu_item[0] != "Categories" )
+				unset( $submenu[ 'edit.php' ][ $key ] ); // Remove "Tags" taxononmies links from the Admin Menu
 		$wp_taxonomies[ 'post_tag' ]->show_ui = false; // Removes quick edit & Post Tags metabox
 		add_meta_box( 'post_tag' . 'div', __( 'Post Tags' ), 'rt_custom_tag_metabox', 'post', 'side', 'low' );
 	}
@@ -120,3 +122,17 @@ function rt_column_contents( $column_name, $post_id ) {
 	}
 }
 add_action( 'manage_posts_custom_column', 'rt_column_contents', 10, 2 );
+
+
+/**
+ * Generate mock taxonomies for testing.
+ **/
+function rt_mock_tax(){
+	$args = array( 'label' => 'Mocks' );
+	register_taxonomy( 'mock_tax', 'post', $args );
+
+	$args = array( 'label' => 'Faux', 'hierarchical' => true );
+	register_taxonomy( 'faux_tax', 'post', $args );
+}
+add_action( 'init', 'rt_mock_tax' );
+
