@@ -21,8 +21,12 @@ function rt_modify_tag_ui(){
 		foreach( $submenu[ 'edit.php' ] as $key => $menu_item )
 			if( $menu_item[1] == 'manage_categories' && $menu_item[0] != "Categories" )
 				unset( $submenu[ 'edit.php' ][ $key ] ); // Remove "Tags" taxononmies links from the Admin Menu
-		$wp_taxonomies[ 'post_tag' ]->show_ui = false; // Removes quick edit & Post Tags metabox
-		add_meta_box( 'post_tag' . 'div', __( 'Post Tags' ), 'rt_custom_tag_metabox', 'post', 'side', 'low' );
+		foreach( $wp_taxonomies as $tax_name => $tax_obj ){
+			if( rt_is_tax_to_change( $tax_name, $tax_obj ) ){
+				$wp_taxonomies[ $tax_name ]->show_ui = false; // Removes quick edit & Post Tags metabox
+				add_meta_box( $tax_name . 'div', $tax_obj->labels->name, 'rt_custom_tag_metabox', 'post', 'side', 'low', $tax_name );
+			}
+		}
 	}
 }
 add_action( 'admin_menu' , 'rt_modify_tag_ui' );
@@ -31,9 +35,9 @@ add_action( 'admin_menu' , 'rt_modify_tag_ui' );
 /**
  * The callback function for the custom tags metabox. 
  **/
-function rt_custom_tag_metabox( $post ) {
+function rt_custom_tag_metabox( $post, $args ) {
 
-	$taxonomy = 'post_tag';
+	$taxonomy = $args[ 'args' ];
 	$tax = get_taxonomy( $taxonomy );
 
 	?>
@@ -55,24 +59,38 @@ function rt_custom_tag_metabox( $post ) {
 
 
 /**
- * When a post is saved by a non-admin user, the tags are sent as an array because
+ * When a post is saved by a non-admin user, the taxonomy tags are sent as an array because
  * they come from a hierarchal UI. This confuses the WordPress tag saving process,
  * so this function transforms the array into the flat CSV string WP expects.
  **/
 function rt_modify_tags_structure(){
+	global $wp_taxonomies;
 
-	if( isset( $_POST[ 'tax_input' ][ 'post_tag' ] ) && is_array( $_POST[ 'tax_input' ][ 'post_tag' ] ) ){
-		$terms = $_POST[ 'tax_input' ][ 'post_tag' ];
-		unset( $terms[0] );
-		foreach( $terms as $id => $term ){
-			$term = get_term( $term, 'post_tag' );
-			$terms[ $id ] = $term->name;
+	foreach( $wp_taxonomies as $tax_name => $tax_obj ){
+		if( isset( $_POST[ 'tax_input' ][ $tax_name ] ) && is_array( $_POST[ 'tax_input' ][ $tax_name ] ) && rt_is_tax_to_change( $tax_name, $tax_obj ) ){
+			$terms = $_POST[ 'tax_input' ][ $tax_name ];
+			unset( $terms[0] );
+			foreach( $terms as $id => $term ){
+				$term = get_term( $term, $tax_name );
+				$terms[ $id ] = $term->name;
+			}
+			$_POST[ 'tax_input' ][ $tax_name ] = implode( ', ', $terms );
 		}
-		$_POST[ 'tax_input' ][ 'post_tag' ] = implode( ', ', $terms );
 	}
 }
 add_action( 'init', 'rt_modify_tags_structure' );
 
+
+/**
+ * Check if the taxonomy specified via parameters should be changed by the plugin
+ **/
+function rt_is_tax_to_change( $tax_name, $tax_obj ){
+
+	if( $tax_obj->hierarchical == false && ( $tax_obj->_builtin == false || $tax_name == 'post_tag' ) )
+		return true;
+	else
+		return false;
+}
 
 /**
  * On plugin activation, remove capabilities for editing/managing/deleting terms from non-admin roles
