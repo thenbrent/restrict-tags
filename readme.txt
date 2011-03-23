@@ -12,7 +12,7 @@ Using this plugin, Administrators can define tags, which are then the only tags 
 
 Allow site admins to restrict the tags available for other users on their site. 
 
-Give custom taxonomies a column on the manage posts page.
+Admins can also restrict the items non-hierarchical custom taxonomies. 
 
 == Installation ==
 
@@ -24,8 +24,6 @@ Give custom taxonomies a column on the manage posts page.
 = Why was this plugin created? =
 
 To restrict the tags available to non-administrator users when publishing a blog post. In much the same way categories are restricted. 
-
-Also to display taxonomy items that related to a post on the manage posts screen. 
 
 = How do I use it? =
 
