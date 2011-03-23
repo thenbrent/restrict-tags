@@ -2,7 +2,8 @@
 /*
 Plugin Name: Restrict Tags
 Description: Allow site admins to restrict the tags & custom taxonomies available for other users on their site.
-Author: Jason Conroy, Brent Shepherd
+Author: _FindingSimple
+Author URI: http://findingsimple.com/
 Version: 1.0
 */
 
