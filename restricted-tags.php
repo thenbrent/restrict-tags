@@ -92,6 +92,7 @@ function rt_is_tax_to_change( $tax_name, $tax_obj ){
 		return false;
 }
 
+
 /**
  * On plugin activation, remove capabilities for editing/managing/deleting terms from non-admin roles
  **/
