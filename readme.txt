@@ -12,7 +12,7 @@ Using this plugin, Administrators can define tags, which are then the only tags 
 
 Allow site admins to restrict the tags available for other users on their site. 
 
-Admins can also restrict the items non-hierarchical custom taxonomies. 
+Admins can also restrict the items for custom, non-hierarchical taxonomies.
 
 == Installation ==
 
