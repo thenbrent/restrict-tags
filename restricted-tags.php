@@ -23,7 +23,6 @@ function rt_modify_tag_ui(){
 			if( $menu_item[1] == 'manage_categories' && $menu_item[0] != "Categories" )
 				unset( $submenu[ 'edit.php' ][ $key ] ); // Remove "Tags" taxononmies links from the Admin Menu
 		foreach( $wp_taxonomies as $tax_name => $tax_obj ){
-			error_log( "$tax_name = " . print_r( $tax_obj, true ) );
 			if( rt_is_tax_to_change( $tax_name, $tax_obj ) ){
 				$wp_taxonomies[ $tax_name ]->show_ui = false; // Removes quick edit & Post Tags metabox
 				add_meta_box( $tax_name . 'div', $tax_obj->labels->name, 'rt_custom_tag_metabox', 'post', 'side', 'low', $tax_name );
