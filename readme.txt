@@ -14,6 +14,8 @@ Allow site admins to restrict the tags available for other users on their site.
 
 Admins can also restrict the items for custom, non-hierarchical taxonomies.
 
+This plugin changes the Post Tag UI on the Edit Post admin page to be similar to that of the Categories UI. Checkboxes for previously defined tags are presented instead of a text field.
+
 == Installation ==
 
 1. Upload the entire plugin folder to the `/wp-content/plugins/` directory.
