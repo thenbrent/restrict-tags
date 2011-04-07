@@ -5,10 +5,10 @@
 # main config
 PLUGINSLUG="restrict-tags"
 CURRENTDIR=`pwd`
-MAINFILE="restricted-tags.php" # this should be the name of the main php file in the wordpress plugin, the one which includes the required headers
+MAINFILE="$PLUGINSLUG.php" # this should be the name of the main php file in the wordpress plugin, the one which includes the required headers
 
 # git config
-GITPATH="$CURRENTDIR/" # this file should be in the base of your git repository
+GITPATH="$CURRENTDIR" # this file should be in the base of your git repository
 
 # svn config
 SVNPATH="/tmp/$PLUGINSLUG" # path to a temp SVN repo. No trailing slash required and don't add trunk.
