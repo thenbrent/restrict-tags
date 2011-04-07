@@ -29,8 +29,11 @@ To restrict the tags available to non-administrator users when publishing a blog
 
 Nothing to configure. No settings. No options. Activate and it will work. 
 
+== Screenshots ==
+
+1. **Restricted Tags** - For non-administrative users, the tags UI becomes similarly to the categories UI. Checkboxes are used instead of the usual free text field. 
+
 == Changelog ==
 
 = 1.0 =
-
 * Initial release
